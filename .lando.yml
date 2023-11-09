@@ -1,0 +1,23 @@
+name: bd.borme-empresas
+proxy:
+  appserver:
+    - bd.borme-empresas.lndo.site:8080
+services:
+  appserver:
+    type: compose
+    services:
+      image: "python:latest"
+      command: /bin/sh -c "uvicorn main:app --reload --host 0.0.0.0 --port 8080"
+      ports:
+        - "8080:8080"
+      volumes:
+        - .:/app # Monta el directorio actual en '/app' dentro del contenedor
+      working_dir: /app # Establece el directorio de trabajo dentro del contenedor
+    ssl: true
+tooling:
+  python:
+    service: appserver
+  pip:
+    service: appserver
+  uvicorn: 
+    service: appserver
