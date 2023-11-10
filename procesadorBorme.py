@@ -1,3 +1,4 @@
+"""
 import pdfplumber
 import re
 
@@ -10,7 +11,8 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 
-if __name__ == "__main__":
+
+    
     pdf_path = "files/BORME-A-2010-210-13.pdf"
     extracted_text = extract_text_from_pdf(pdf_path)
     
@@ -20,6 +22,7 @@ if __name__ == "__main__":
 
     # Imprimir las líneas encontradas
     for inscription in inscriptions:
+        print ("-" + inscriptions[0])
         # Expresión regular para buscar el número de inscripción
         inscriptionNumber_pattern = r'^(\d+) - ([A-Z\s,]+)\.'
         matches = re.search(inscriptionNumber_pattern, inscription)
