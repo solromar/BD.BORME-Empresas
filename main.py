@@ -2,7 +2,6 @@ from flask import Flask, jsonify
 import pdfplumber
 import re
 
-
 app = Flask(__name__)
 
 # Defino la función para extraer texto
