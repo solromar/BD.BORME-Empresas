@@ -1,7 +1,4 @@
 name: bd.borme-empresas
-proxy:
-  app:
-    - bd.borme-empresas.lndo.site:8080
 services:
   app:
     type: python:3.8
