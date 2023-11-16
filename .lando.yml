@@ -1,38 +1,37 @@
-name: bd.borme-empresas
+name: bdborme-empresas
+proxy:
+  appserver:
+    - bdborme-empresas.lndo.site:8080
 services:
-  app:
-    type: python:3.8
-    command: flask run --host=0.0.0.0 --port=8080
-    ports:
-      - "8080:8080"
-    volumes:
-      - .:/bd.borme-empresas # Monta el directorio actual en '/app' dentro del contenedor
-    working_dir: /bd.borme-empresas # Establece el directorio de trabajo dentro del contenedor
-    via: pip
-    environment:
-      FLASK_APP: main.py
-    ssl: false
-    xdebug: false
-    config:
-      - DATABASE_URI=mongodb://mongo:27017/mydatabase
-    tooling:
-      - name: python
-        service: app
-      - name: pip
-        service: app
-
+  appserver:
+    type: compose
+    services:
+      image: "python:3.8-slim-buster"
+      command: /bin/sh -c "flask run --host=0.0.0.0 --port=8080"
+      ports:
+        - "8080:8080"
+      volumes:
+        - .:/app  # Monta el directorio actual en '/app' dentro del contenedor
+      working_dir: /app  # Establece el directorio de trabajo dentro del contenedor
+      environment:
+        FLASK_APP: main.py
+    build_as_root:
+        - pip install -r /app/requirements.txt
+    ssl: true
   mongo:
     type: mongo:4.2
     ports:
       - "27017:27017"
-
 tooling:
   python:
-    service: app
+    service: appserver
     description: Run Python commands
-  pipenv:
-    service: app
+  pip:
+    service: appserver
     description: Run Pip commands
+  flask:
+    service: appserver
+    description: Run Flask commands
   mongo:
     service: mongo
     description: Run MongoDB commands
