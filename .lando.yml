@@ -7,7 +7,7 @@ services:
     type: compose
     services:
       image: "python:3.8-slim-buster"
-      command: /bin/sh -c "flask run --host=0.0.0.0 --port=8080"
+      command: /bin/sh -c "flask run --host=0.0.0.0 --port=8080 --debug"
       ports:
         - "8080:8080"
       volumes:
@@ -15,6 +15,7 @@ services:
       working_dir: /app  # Establece el directorio de trabajo dentro del contenedor
       environment:
         FLASK_APP: main.py
+        FLASK_ENV: development
     build_as_root:
         - pip install -r /app/requirements.txt
     ssl: true

@@ -2,9 +2,6 @@ from flask import Flask, jsonify
 import pdfplumber
 import re
 
-
-
-
 app = Flask(__name__)
 
 # Defino la función para extraer texto
@@ -46,16 +43,10 @@ def find_bold_for_inscription(inscription, bold_text):
         return clean_text
     else:
         return "No disponible"
-    
- 
 
 
-def file_type_a(pdf_path):
-    company_data = {}
-    
-    texto_del_pdf = extract_text_from_pdf(pdf_path)
-    bold_text = extract_bold_text(pdf_path)
-   
+def file_type_a(texto_del_pdf, bold_text):
+    extracted_info = []
     
     # Extraer la fecha del Borme
     borme_date_pattern = r'(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\s+(\d+)\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})'
@@ -70,9 +61,9 @@ def file_type_a(pdf_path):
      month = months[month_text.lower()]
 
     # Formatear la fecha al formato DD/MM/YYYY
-     borme_date = f"{day.zfill(2)}/{month}/{year}"
+     formatted_date = f"{day.zfill(2)}/{month}/{year}"
     else:
-     borme_date = "Fecha no encontrada"
+     formatted_date = "Fecha no encontrada"
 
     # Buscar la provincia del Acto
     constitution_commercial_registry_pattern = r'^Actos inscritos\n([A-Z\/ÁÉÍÓÚÜ\s]+)\n'
@@ -177,77 +168,39 @@ def file_type_a(pdf_path):
         constitution_social_capital_pattern = r'Capital:\s*([\d.,]+)\s*Euros\.'
         constitution_social_capital_match = re.search(constitution_social_capital_pattern, inscription, re.DOTALL)
         constitution_social_capital = constitution_social_capital_match.group(1).strip() if constitution_social_capital_match else "No disponible"
-        
-        # Clave para identificar la empresa
-        company_key = company_social_denomination
-        # Inicializar datos de empresa si aún no existe en el diccionario
-        if company_key not in company_data:
-            company_data[company_key] = {
-                "createdAt": None,
-            "updatedAt": None,
-            "companySocialDenomination": company_social_denomination,          
-            "companyName": company_name,
-            "companyNif": None,
-            "companyCurrentAddress": None,
-            "companyCurrentSocialObject": None,
-            "companyCurrentSocialCapital": None,
-            "companyPhoneNumber": None,
-            "companyEmail": None,
-            "companyWeb": None,
-            "companyEmployeesNumber": None,
-            "companyParent": None,
-            "constitutionCommercialRegistry": None,
-            "constitutionDate": None,
-            "operationsStartDate": operation_start_date,
-            "companyDuration": None,
-            "constitutionAddress": constitution_address,
-            "constitutionSocialObject": constitution_social_object,
-            "constitutionSocialCapital": constitution_social_capital,
-            "constitutionRegistryData": None,
-            "constitutionInscription": None,
-            "constitutionFile": None,
-            "companyState": None,
-            "administration": None,
-            "administratorsList": None,
-            "administrationAppointmentDate": None,
-            "administrationAppointmentInscription": None,
-            "administrationAppointmentFile": None,
-            "companyInscription": []              
             
-        }
-        # Crear y agregar la inscripción a la empresa correspondiente
-        company_inscription  = {
-                "createdAt": None,
-                "updatedAt": None,
-                "inscriptionCommercialRegistry": constitution_commercial_registry,
-                "inscriptionNumber": inscription_number,
-                "inscriptionSection": inscription_section,
-                "inscriptionCategory": inscription_category,
-                "inscriptionName": inscription_name,
-                "inscriptionDate": inscription_date,
-                "inscriptionRegistryData": inscription_registry_data,
-                "inscription": inscription,
-                "bormeDate": borme_date,
-                "inscriptionFile": None,
-                }
-        
-        company_data[company_key]["companyInscription"].append(company_inscription)
-        # Convertir los datos del diccionario a una lista de empresas
-    companies = list(company_data.values())
 
-    return companies
+        extracted_info.append({
+            'Acto Inscripcion': inscription,
+            'Categoria': inscription_category,
+            'Datos Registrales': inscription_registry_data,
+            'Denominación Social': company_social_denomination,
+            'Fecha del Borme': formatted_date,
+            'Fecha del Acto': inscription_date,
+            "Nombre de la Sociedad": company_name,
+            'Numero de Acto inscrito': inscription_number,
+            'Nombre de TODOS los Acto Inscrito en NEGRITA': inscription_name,
+            'Registro Comercial': constitution_commercial_registry,
+            'Sección': inscription_section, 
+            'Comienzo de Operaciones': operation_start_date,
+            'Objeto Social':constitution_social_object,
+            'Domicilio':constitution_address,
+            'Capital': constitution_social_capital
+        })
+    return extracted_info
 
 
-@app.route('/')  # Defino la ruta
+
+
+@app.route('/filea')  # Defino la ruta
 def home():
     pdf_path = "files/BORME-A-2010-210-13.pdf"
-    #texto_del_pdf = extract_text_from_pdf(pdf_path)
-    #boldWords = extract_bold_text(pdf_path)
-    company = file_type_a(pdf_path)
+    texto_del_pdf = extract_text_from_pdf(pdf_path)
+    boldWords = extract_bold_text(pdf_path)
+    extracted_info = file_type_a(texto_del_pdf, boldWords)
     
-    return jsonify(company)
+    return jsonify(extracted_info)
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
+if __name__ == '__filea__':
+    app.run()
