@@ -1,8 +1,8 @@
 from flask import Flask, jsonify
 import pdfplumber
 import re
-
-
+import os
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -48,10 +48,10 @@ def find_bold_for_inscription(inscription, bold_text):
         return "No disponible"
     
  
-
+# -------------------------------------------------- PROCESAMIENTO BORME A --------------------------------------------------------------
 
 def file_type_a(pdf_path):
-    company_data = {}
+    companies = []
     
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     bold_text = extract_bold_text(pdf_path)
@@ -75,9 +75,9 @@ def file_type_a(pdf_path):
      borme_date = "Fecha no encontrada"
 
     # Buscar la provincia del Acto
-    constitution_commercial_registry_pattern = r'^Actos inscritos\n([A-Z\/ÁÉÍÓÚÜ\s]+)\n'
-    constitution_commercial_registry_match = re.search(constitution_commercial_registry_pattern, texto_del_pdf, re.MULTILINE)
-    constitution_commercial_registry = constitution_commercial_registry_match.group(1) if constitution_commercial_registry_match else "No encontrado"
+    inscription_commercial_registry_pattern = r'^Actos inscritos\n([A-Z\/ÁÉÍÓÚÜ\s]+)\n'
+    inscription_commercial_registry_match = re.search(inscription_commercial_registry_pattern, texto_del_pdf, re.MULTILINE)
+    inscription_commercial_registry = inscription_commercial_registry_match.group(1) if inscription_commercial_registry_match else "No encontrado"
 
     # Buscar Sección del Acto
     inscription_section_pattern = r'Pág\.\s+\d+\s+SECCIÓN\s+(PRIMERA|SEGUNDA)'
@@ -117,9 +117,7 @@ def file_type_a(pdf_path):
         if name_match:
          company_name = name_match.group(1).strip()
         else:
-         company_name = 'Nombre no encontrado'    
-
-    
+         company_name = 'Nombre no encontrado' 
             
     # Expresión regular para extraer los datos registrales
         registry_data_pattern = r'Datos\s*registrales\.(.*?)\s*\('
@@ -151,12 +149,13 @@ def file_type_a(pdf_path):
     # Relaciona cada acto con las palabras en negrita de inscription        
         inscription_name = find_bold_for_inscription(inscription, bold_text)
         
-    # Si el acto es una constitucion, inicializo las variables y extraigo los datos relativos al acto
-        operation_start_date = 'No disponible'
-        constitution_social_object = 'No disponible'
-        constitution_address = 'No disponible'
-        constitution_social_capital = 'No disponible'
-        if 'Constitución' in inscription:
+#--------------------------OBTENER LOS DATOS DE CONSTITUCION DE LA COMPANY -------------------------------------------------------------------------        
+    # Verificar si la inscripción contiene 'Constitución'
+        is_constitution = 'Constitución' in inscription
+
+        # Extracción de datos específicos de constitución si es necesario
+        constitution_date, constitution_registry_data, constitution_inscription, operation_start_date, constitution_address, constitution_social_object, constitution_social_capital = (None,)*7
+        if is_constitution:
     # Extraer la fecha de inicio de operaciones
          operation_start_date_pattern = r'Comienzo de operaciones:\s*(\d{1,2}\.\d{1,2}\.\d{2,4})\.'
          operation_start_date_match = re.search(operation_start_date_pattern, inscription)
@@ -164,7 +163,7 @@ def file_type_a(pdf_path):
              
 
     # Extraer el objeto social
-        constitution_social_object_pattern = r'Objeto social:\s*(.+?)\. Domicilio:'
+        constitution_social_object_pattern = r'Objeto social:\s*(.+?)\.\s*Domicilio:'
         constitution_social_object_match = re.search(constitution_social_object_pattern, inscription, re.DOTALL)
         constitution_social_object = constitution_social_object_match.group(1).strip() if constitution_social_object_match else "No disponible"
 
@@ -178,13 +177,46 @@ def file_type_a(pdf_path):
         constitution_social_capital_match = re.search(constitution_social_capital_pattern, inscription, re.DOTALL)
         constitution_social_capital = constitution_social_capital_match.group(1).strip() if constitution_social_capital_match else "No disponible"
         
-        # Clave para identificar la empresa
-        company_key = company_social_denomination
-        # Inicializar datos de empresa si aún no existe en el diccionario
-        if company_key not in company_data:
-            company_data[company_key] = {
-                "createdAt": None,
-            "updatedAt": None,
+    # Expresión regular para extraer la fecha
+        date_pattern = r'\(\s*(\d{1,2})\.(\d{1,2})\.(\d{2,4})\)'
+        date_match = re.search(date_pattern, inscription)
+
+        if date_match:
+         day, month, year = date_match.groups()
+    # Asegurar que el día y el mes tengan dos dígitos
+         day = day.zfill(2)
+         month = month.zfill(2)
+
+    # Ajustar el año para que tenga cuatro dígitos
+         year = "20" + year if len(year) == 2 else year
+
+    # Formatear la fecha al formato DD/MM/YYYY
+         constitution_date = f"{day}/{month}/{year}"
+        else:
+          constitution_date = 'Fecha no encontrada' 
+          
+    # Expresión regular para extraer los datos registrales
+        registry_data_pattern = r'Datos\s*registrales\.(.*?)\s*\('
+        registry_data_match = re.search(registry_data_pattern, inscription, re.DOTALL)
+    
+        if registry_data_match:
+         constitution_registry_data = " ".join(registry_data_match.group(1).split())
+        else:
+         constitution_registry_data = 'Datos registrales no encontrados'  
+         
+         # Asignar los campos relacionados con la constitución
+        constitution_inscription = inscription
+        constitution_file = os.path.basename(pdf_path)
+        
+        
+        # Buscar la provincia del Acto
+        constitution_commercial_registry_pattern = r'^Actos inscritos\n([A-Z\/ÁÉÍÓÚÜ\s]+)\n'
+        constitution_commercial_registry_match = re.search(constitution_commercial_registry_pattern, texto_del_pdf, re.MULTILINE)
+        constitution_commercial_registry = constitution_commercial_registry_match.group(1) if constitution_commercial_registry_match else "No encontrado"
+       
+        company = {
+            "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "companySocialDenomination": company_social_denomination,          
             "companyName": company_name,
             "companyNif": None,
@@ -196,30 +228,29 @@ def file_type_a(pdf_path):
             "companyWeb": None,
             "companyEmployeesNumber": None,
             "companyParent": None,
-            "constitutionCommercialRegistry": None,
-            "constitutionDate": None,
-            "operationsStartDate": operation_start_date,
+            "constitutionCommercialRegistry": constitution_commercial_registry if is_constitution else "No disponible",
+            "constitutionDate": constitution_date if is_constitution else "No disponible",
+            "constitutionRegistryData": constitution_registry_data if is_constitution else "No disponible",
+            "constitutionInscription": constitution_inscription if is_constitution else "No disponible",
+            "operationsStartDate": operation_start_date if is_constitution else "No disponible",
             "companyDuration": None,
-            "constitutionAddress": constitution_address,
-            "constitutionSocialObject": constitution_social_object,
-            "constitutionSocialCapital": constitution_social_capital,
-            "constitutionRegistryData": None,
-            "constitutionInscription": None,
-            "constitutionFile": None,
+            "constitutionAddress": constitution_address if is_constitution else "No disponible",
+            "constitutionSocialObject": constitution_social_object if is_constitution else "No disponible",
+            "constitutionSocialCapital": constitution_social_capital if is_constitution else "No disponible",
+            "constitutionFile": constitution_file if is_constitution else "No disponible",            
             "companyState": None,
             "administration": None,
             "administratorsList": None,
             "administrationAppointmentDate": None,
             "administrationAppointmentInscription": None,
             "administrationAppointmentFile": None,
-            "companyInscription": []              
-            
+            "companyInscription": []
         }
         # Crear y agregar la inscripción a la empresa correspondiente
         company_inscription  = {
-                "createdAt": None,
-                "updatedAt": None,
-                "inscriptionCommercialRegistry": constitution_commercial_registry,
+                "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "inscriptionCommercialRegistry": inscription_commercial_registry,
                 "inscriptionNumber": inscription_number,
                 "inscriptionSection": inscription_section,
                 "inscriptionCategory": inscription_category,
@@ -228,19 +259,18 @@ def file_type_a(pdf_path):
                 "inscriptionRegistryData": inscription_registry_data,
                 "inscription": inscription,
                 "bormeDate": borme_date,
-                "inscriptionFile": None,
+                "inscriptionFile": os.path.basename(pdf_path)
                 }
-        
-        company_data[company_key]["companyInscription"].append(company_inscription)
-        # Convertir los datos del diccionario a una lista de empresas
-    companies = list(company_data.values())
+            
+        company["companyInscription"].append(company_inscription)
+        companies.append(company)
 
     return companies
 
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/BORME-A-2010-210-13.pdf"
+    pdf_path = "/home/soledad/BD.BORME-Empresas/files/prueba/2010/11/02/pdfs/BORME-A-2010-210-13.pdf"
     #texto_del_pdf = extract_text_from_pdf(pdf_path)
     #boldWords = extract_bold_text(pdf_path)
     company = file_type_a(pdf_path)
