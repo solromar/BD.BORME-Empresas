@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 import os
 from datetime import datetime
-from main import file_type_a
+from Files_A import file_type_a
 
 
 mongo_host = "localhost"
