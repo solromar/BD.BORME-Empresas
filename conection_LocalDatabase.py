@@ -1,3 +1,4 @@
+"""
 from pymongo import MongoClient
 import os
 from datetime import datetime
@@ -122,3 +123,4 @@ if __name__ == '__main__':
     archivos_procesados = cargar_archivos_procesados(ruta_archivo_registros)
 
     procesar_pdfs_por_orden_y_tipo(directory, db, ruta_archivo_registros, archivos_procesados)
+"""

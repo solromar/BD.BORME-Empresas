@@ -55,11 +55,12 @@ def file_type_a(pdf_path):
     
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     bold_text = extract_bold_text(pdf_path)
-   
+    
     
     # Extraer la fecha del Borme
     borme_date_pattern = r'(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\s+(\d+)\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})'
     borme_date_match = re.search(borme_date_pattern, texto_del_pdf)
+    
     if borme_date_match:
     # Extraemos el día, mes (en texto) y año
      day, month_text, year = borme_date_match.groups()[1:]
@@ -68,12 +69,15 @@ def file_type_a(pdf_path):
               "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
               "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"}
      month = months[month_text.lower()]
-
+     
     # Formatear la fecha al formato DD/MM/YYYY
      borme_date = f"{day.zfill(2)}/{month}/{year}"
+     print(borme_date)
     else:
      borme_date = "Fecha no encontrada"
-
+     
+     
+     
     # Buscar la provincia del Acto
     inscription_commercial_registry_pattern = r'^Actos inscritos\n([A-Z\/ÁÉÍÓÚÜ\s]+)\n'
     inscription_commercial_registry_match = re.search(inscription_commercial_registry_pattern, texto_del_pdf, re.MULTILINE)
@@ -267,10 +271,10 @@ def file_type_a(pdf_path):
 
     return companies
 
-
+#"""
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "/home/soledad/BD.BORME-Empresas/files/prueba/2010/11/02/pdfs/BORME-A-2010-210-13.pdf"
+    pdf_path = "files/prueba_A/2010/11/02/pdfs/BORME-A-2010-210-13.pdf"
     #texto_del_pdf = extract_text_from_pdf(pdf_path)
     #boldWords = extract_bold_text(pdf_path)
     company = file_type_a(pdf_path)
@@ -280,4 +284,4 @@ def home():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
+#"""
