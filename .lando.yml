@@ -7,17 +7,29 @@ services:
     type: compose
     services:
       image: "python:3.8-slim-buster"
-      command: /bin/sh -c "flask run --host=0.0.0.0 --port=8080 --debug"
       ports:
         - "8080:8080"
+        - "7071:7071"
       volumes:
         - .:/app  # Monta el directorio actual en '/app' dentro del contenedor
       working_dir: /app  # Establece el directorio de trabajo dentro del contenedor
       environment:
-        FLASK_APP: main.py
-        FLASK_ENV: development
+        AzureWebJobsStorage: 'DefaultEndpointsProtocol=https;AccountName=ifinancierastorage;AccountKey=FvDbRrrMUAafYuY77xolcJMR4TrywKaEW7iE3ouNfcqmVLt0PRxurQ8GGruKXVwRb+uQ7H8jBDEL+AStG2gNdw==;EndpointSuffix=core.windows.net'
+        MONGODB_URI: 'mongodb://mongo:27017/db_borme_empresas'
+        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
     build_as_root:
+        - apt update
+        - apt-get install -y curl gpg lsb-release
+        - curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+        - mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+        - echo "deb [arch=amd64] https://packages.microsoft.com/debian/$(lsb_release -rs | cut -d'.' -f 1)/prod $(lsb_release -cs) main" > /etc/apt/sources.list.d/dotnetdev.list
+        - curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -  # Agrega esta línea
+        - apt update
+        - apt-get install azure-functions-core-tools-4
         - pip install -r /app/requirements.txt
+        - export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+    build:
+        - export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
     ssl: true
   mongo:
     type: mongo:4.2
@@ -30,9 +42,6 @@ tooling:
   pip:
     service: appserver
     description: Run Pip commands
-  flask:
-    service: appserver
-    description: Run Flask commands
   mongo:
     service: mongo
     description: Run MongoDB commands

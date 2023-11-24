@@ -1,11 +1,7 @@
-from flask import Flask, jsonify
 import pdfplumber
 import re
 import os
 from datetime import datetime
-
-
-app = Flask(__name__)
 
 # Defino la función para extraer texto
 def extract_text_from_pdf(pdf_path):
@@ -271,7 +267,6 @@ def file_type_a(pdf_path):
     return companies
 
 #"""
-@app.route('/')  # Defino la ruta
 def home():
     pdf_path = "files/prueba_A/2010/11/02/pdfs/BORME-A-2010-210-13.pdf"
     #texto_del_pdf = extract_text_from_pdf(pdf_path)
@@ -279,8 +274,3 @@ def home():
     company = file_type_a(pdf_path)
     
     return jsonify(company)
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
-#"""
