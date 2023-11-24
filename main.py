@@ -15,14 +15,27 @@ def extract_text_from_pdf(pdf_path):
             text += page.extract_text()
     return text
 
-def extract_italic_text(pdf_path):
-    italic_text = ""
+def extract_italic_titles(pdf_path):
+    titles = []
+    current_title = ""
+    title_started = False
+
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
             for char in page.chars:
                 if 'Italic' in char['fontname']:
-                    italic_text += char['text']
-    return italic_text
+                    current_title += char['text']
+                    title_started = True
+                elif title_started:
+                    titles.append(current_title.strip())
+                    current_title = ""
+                    title_started = False
+
+    # Asegurarse de añadir el último título si termina en la última página
+    if current_title:
+        titles.append(current_title.strip())
+
+    return titles
  
 # -------------------------------------------------- PROCESAMIENTO BORME B --------------------------------------------------------------
 
@@ -30,7 +43,7 @@ def file_type_b(pdf_path):
     companies = []
     
     texto_del_pdf = extract_text_from_pdf(pdf_path)
-    italic_text = extract_italic_text(pdf_path)
+    
     #print (texto_del_pdf)
     
     
@@ -119,7 +132,7 @@ def file_type_b(pdf_path):
           inscription_date = 'Fecha no encontrada' 
             
     # Relaciona cada acto con las palabras en negrita de inscription        
-        #inscription_name = find_bold_for_inscription(inscription, bold_text)
+        inscription_name =  "italic_text"
         
 
        
@@ -163,7 +176,7 @@ def file_type_b(pdf_path):
                 "inscriptionNumber": inscription_number,
                 "inscriptionSection": inscription_section,
                 "inscriptionCategory": inscription_category,
-                #"inscriptionName": inscription_name,
+                "inscriptionName": inscription_name,
                 "inscriptionDate": inscription_date,
                 "inscriptionRegistryData": None,
                 "inscription": inscription,
@@ -179,10 +192,12 @@ def file_type_b(pdf_path):
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/prueba_B/2009/02/11/pdfs/BORME-B-2009-28-35.pdf"
-    texto_del_pdf = extract_text_from_pdf(pdf_path)
-    italic_text = extract_italic_text(pdf_path)
+    pdf_path = "files/pruebas chicas/prueba_B/2009/02/11/pdfs/BORME-B-2009-28-35.pdf"
+    texto_del_pdf = extract_text_from_pdf(pdf_path)    
     company = file_type_b(pdf_path)
+    italic_titles = extract_italic_titles(pdf_path)
+    for title in italic_titles:
+     print(title)  
     
     return jsonify(company)
 

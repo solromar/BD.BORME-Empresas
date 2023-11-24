@@ -72,7 +72,6 @@ def file_type_a(pdf_path):
      
     # Formatear la fecha al formato DD/MM/YYYY
      borme_date = f"{day.zfill(2)}/{month}/{year}"
-     print(borme_date)
     else:
      borme_date = "Fecha no encontrada"
      
