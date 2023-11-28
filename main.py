@@ -63,19 +63,21 @@ def process_block(block):
             parts = line.split('-', 1)
             if len(parts) == 2:
                 inscription_number = parts[0].strip()
-                company_social_denomination = parts[1].split('(')[0].strip()
+                company_data = parts[1].strip()
+                company_social_denomination = company_data.split('(')[0].strip()
+                # Extraer el nombre de la empresa sin el tipo de compañía
                 # Modificamos la expresión regular para ser más flexible
                 company_name_match = re.search(r'(.*?)(?:\s+(SOCIEDAD LIMITADA|SL|SLL|SL EN LIQUIDACION|SLNE|SLNE EN LIQUIDACION|SA|SA EN LIQUIDACION|SOCIEDAD LIMITADA LABORAL|SOCIEDAD ANONIMA|S\.L\.|S\.L\.L\.|S\.A\.|S\.A\.A\.|S\.L\.L\.))?(?:\s*\(.+\))?\s*\.?$', company_social_denomination, re.IGNORECASE)
                 if company_name_match:
                     company_name = company_name_match.group(1).strip()
                 else:
                     company_name = 'Nombre no encontrado'
-                    
-                
-                  
-                
+            
+            # Extraer la fecha
+                date_match = re.search(r'\(((\d{1,2}/\d{1,2}/\d{2,4})|(\d{4}))\)', company_data)
+                inscription_date = date_match.group(1) if date_match else "Fecha no encontrada"
 
-                extracted_data.append((inscription_name, inscription_number, company_social_denomination, company_name))
+                extracted_data.append((inscription_name, inscription_number, company_social_denomination, company_name, inscription_date, line))
                 
     
     return extracted_data
@@ -129,7 +131,7 @@ def file_type_b(pdf_path):
     
     for block in blocks:
         processed_data = process_block(block)
-        for inscription_name, inscription_number, company_social_denomination, company_name in processed_data:
+        for inscription_name, inscription_number, company_social_denomination, company_name, inscription_date, lines in processed_data:
             company_inscription = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -138,9 +140,9 @@ def file_type_b(pdf_path):
                 "inscriptionSection": inscription_section,
                 "inscriptionCategory": inscription_category,
                 "inscriptionName": inscription_name,
-                #"inscriptionDate": inscription_date,
+                "inscriptionDate": inscription_date,
                 "inscriptionRegistryData": None,
-                "inscription": block,
+                "inscription": lines,
                 "bormeDate": borme_date,
                 "inscriptionFile": os.path.basename(pdf_path)
             }
