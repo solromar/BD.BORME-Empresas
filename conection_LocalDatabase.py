@@ -2,6 +2,7 @@ from pymongo import MongoClient
 import os
 from datetime import datetime, timedelta
 from Files_A import file_type_a
+from Files_B import file_type_b
 
 
 mongo_host = "localhost"
@@ -85,7 +86,14 @@ def procesar_pdf(db, ruta_archivo_registros, pdf_path,ruta_archivo_errores, arch
         
     print(f"Procesando archivo: {pdf_path} (Fecha: {fecha_archivo})")
     try:
-        data_to_insert = file_type_a(pdf_path)
+        if nombre_archivo.startswith('BORME-A'):
+            data_to_insert = file_type_a(pdf_path)
+        elif nombre_archivo.startswith('BORME-B'):
+            data_to_insert = file_type_b(pdf_path)
+        else:
+            raise ValueError(f"Tipo de archivo desconocido: {nombre_archivo}")
+        
+       
         if isinstance(data_to_insert, list):
             for company in data_to_insert:
                 verificar_e_insertar_compania(db, company)
@@ -127,7 +135,13 @@ def procesar_pdf(db, ruta_archivo_registros, pdf_path, ruta_archivo_errores, arc
         
     print(f"Procesando archivo: {pdf_path} (Fecha: {fecha_archivo})")
     try:
-        data_to_insert = file_type_a(pdf_path)
+        if nombre_archivo.startswith('BORME-A'):
+            data_to_insert = file_type_a(pdf_path)
+        elif nombre_archivo.startswith('BORME-B'):
+            data_to_insert = file_type_b(pdf_path)
+        else:
+            raise ValueError(f"Tipo de archivo desconocido: {nombre_archivo}")
+        
         if isinstance(data_to_insert, list):
             for company in data_to_insert:
                 # Establecer las fechas para la compañía
@@ -165,12 +179,10 @@ def obtener_fecha_inicio_procesamiento(última_fecha_procesada):
 
 # ----------------------------------------------------   -------------------------------------------- 
 # Procesa archivos PDF en un directorio específico, ordenándolos por año, mes y día.
-# Maneja archivos de tipo 'BORME-A', 'BORME-B', 'BORME-C' y 'BORME-S', aunque actualmente solo procesa archivos 'BORME-A'.
+# Maneja archivos de tipo 'BORME-A', 'BORME-B', 'BORME-C' y 'BORME-S', aunque actualmente solo procesa archivos 'BORME-A' y 'BORME-B'.
 
 def procesar_pdfs_por_orden_y_tipo(directory, db, ruta_archivo_registros, ruta_archivo_errores, archivos_procesados, año_inicio, mes_inicio, día_inicio):
     archivos_procesados_contador = 0
-    año_actual_procesado = False
-    mes_actual_procesado = False
 
     for year in sorted(os.listdir(directory)):
         año_actual = int(year)
@@ -195,24 +207,10 @@ def procesar_pdfs_por_orden_y_tipo(directory, db, ruta_archivo_registros, ruta_a
                         if os.path.isdir(path_day):
                             archivos = sorted([f for f in os.listdir(path_day) if f.lower().endswith('.pdf')])
                             for archivo in archivos:
-                                if archivo.startswith('BORME-A'):
+                                if archivo.startswith(('BORME-A', 'BORME-B')):
                                     procesar_pdf(db, ruta_archivo_registros, os.path.join(path_day, archivo), ruta_archivo_errores, archivos_procesados)
                                     archivos_procesados_contador += 1
 
-                    mes_actual_procesado = True
-            año_actual_procesado = True
-
-            if año_actual_procesado:
-                año_inicio = año_actual + 1
-                mes_inicio = 1  # Reiniciar mes al comienzo del siguiente año
-                día_inicio = 1  # Reiniciar día al comienzo del siguiente año
-            elif mes_actual_procesado:
-                mes_inicio = mes_actual + 1
-                día_inicio = 1  # Reiniciar día al comienzo del siguiente mes
-      
-                #for archivo in archivos:
-                # if archivo.startswith(('BORME-B', 'BORME-C', 'BORME-S')) and not archivo.startswith('BORME-A'):
-                #    procesar_pdf(db, ruta_archivo_registros, os.path.join(path_day, archivo),ruta_archivo_errores, archivos_procesados)
     return archivos_procesados_contador
 
 

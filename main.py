@@ -34,27 +34,38 @@ def extract_italic_titles(pdf_path):
     # Asegurarse de añadir el último título si termina en la última página
     if current_title:
         titles.append(current_title.strip())
-
+    
     return titles
 
-def extract_blocks_with_titles(texto_del_pdf, pdf_path):    
+def extract_inscriptions_with_titles(texto_del_pdf, pdf_path):    
     italic_titles = extract_italic_titles(pdf_path)
-    blocks = []
-    current_block = ''
+    inscriptions = []
+    current_inscription = ''
+    exclude_patterns = ["https://www.boe.es", "EMROB","BOLETÍN OFICIAL DEL REGISTRO MERCANTIL", "Núm." , "Pág. ", "SECCIÓN", "Empresarios", "Otros actos publicados en el Registro Mercantil", "ILLES BALEARS"]
+    
     for line in texto_del_pdf.split('\n'):
-        if line in italic_titles:
-            if current_block:
-                blocks.append(current_block.strip())
-                current_block = ''
-            current_block += line + '\n'
-        else:
-            current_block += line + '\n'
-    if current_block:
-        blocks.append(current_block.strip())
-    return blocks
+        if any(exclude_pattern in line for exclude_pattern in exclude_patterns):
+            # Si encontramos alguna de las líneas de exclusión, finalizamos la inscripción actual y continuamos con la siguiente
+            if current_inscription:
+                inscriptions.append(current_inscription.strip())
+                current_inscription = ''
+            continue
 
-def process_block(block):
-    lines = block.split('\n')
+        if line in italic_titles and current_inscription:
+            # Si encontramos un nuevo título en cursiva y hay una inscripción en curso, la guardamos
+            inscriptions.append(current_inscription.strip())
+            current_inscription = ''
+
+        current_inscription += line + '\n'
+
+    if current_inscription:
+        inscriptions.append(current_inscription.strip())
+
+    return inscriptions
+
+
+def process_inscription(inscription):
+    lines = inscription.split('\n')    
     inscription_name = lines[0]  # El nombre de la inscripción es la primera línea del bloque
     extracted_data = []
         
@@ -67,7 +78,7 @@ def process_block(block):
                 company_social_denomination = company_data.split('(')[0].strip()
                 # Extraer el nombre de la empresa sin el tipo de compañía
                 # Modificamos la expresión regular para ser más flexible
-                company_name_match = re.search(r'(.*?)(?:\s+(SOCIEDAD LIMITADA|SL|SLL|SL EN LIQUIDACION|SLNE|SLNE EN LIQUIDACION|SA|SA EN LIQUIDACION|SOCIEDAD LIMITADA LABORAL|SOCIEDAD ANONIMA|S\.L\.|S\.L\.L\.|S\.A\.|S\.A\.A\.|S\.L\.L\.))?(?:\s*\(.+\))?\s*\.?$', company_social_denomination, re.IGNORECASE)
+                company_name_match = re.search(r'(.*?)(?:\s+(SOCIEDAD LIMITADA|SOCIEDAD LIMITADA EN LIQUIDACION|SL|SLL|SL EN LIQUIDACION|SLNE|SLNE EN LIQUIDACION|SA|SA EN LIQUIDACION|SOCIEDAD LIMITADA LABORAL|SOCIEDAD ANONIMA|S\.L\.|S\.L\.L\.|S\.A\.|S\.A\.A\.|S\.L\.L\.))?(?:\s*\(.+\))?\s*\.?$', company_social_denomination, re.IGNORECASE)
                 if company_name_match:
                     company_name = company_name_match.group(1).strip()
                 else:
@@ -78,10 +89,9 @@ def process_block(block):
                 inscription_date = date_match.group(1) if date_match else "Fecha no encontrada"
 
                 extracted_data.append((inscription_name, inscription_number, company_social_denomination, company_name, inscription_date, line))
-                
-    
+   
     return extracted_data
-
+    
    
 # -------------------------------------------------- PROCESAMIENTO BORME B --------------------------------------------------------------
 
@@ -89,7 +99,7 @@ def file_type_b(pdf_path):
     companies = []
     
     texto_del_pdf = extract_text_from_pdf(pdf_path)
-    blocks = extract_blocks_with_titles(texto_del_pdf, pdf_path)
+    inscriptions = extract_inscriptions_with_titles(texto_del_pdf, pdf_path)
     
     
     
@@ -129,8 +139,8 @@ def file_type_b(pdf_path):
     inscription_category = inscription_category_match.group(1) if inscription_category_match else "No encontrado"
    
     
-    for block in blocks:
-        processed_data = process_block(block)
+    for inscription in inscriptions:
+        processed_data = process_inscription(inscription)
         for inscription_name, inscription_number, company_social_denomination, company_name, inscription_date, lines in processed_data:
             company_inscription = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -163,14 +173,12 @@ def file_type_b(pdf_path):
 @app.route('/')  # Defino la ruta
 def home():
     pdf_path = "files/pruebas chicas/prueba_B/2009/02/11/pdfs/BORME-B-2009-28-48.pdf"
-    texto_del_pdf = extract_text_from_pdf(pdf_path)    
     company = file_type_b(pdf_path)
-    italic_titles = extract_italic_titles(pdf_path)
-    
+    #texto_del_pdf = extract_text_from_pdf(pdf_path)
+    #italic_titles = extract_italic_titles(pdf_path)
     
     return jsonify(company)
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-
