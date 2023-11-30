@@ -78,7 +78,7 @@ def process_inscription(inscription):
                 company_social_denomination = company_data.split('(')[0].strip()
                 # Extraer el nombre de la empresa sin el tipo de compañía
                 # Modificamos la expresión regular para ser más flexible
-                company_name_match = re.search(r'(.*?)(?:\s+(SOCIEDAD LIMITADA|SOCIEDAD LIMITADA EN LIQUIDACION|SL|SLL|SL EN LIQUIDACION|SLNE|SLNE EN LIQUIDACION|SA|SA EN LIQUIDACION|SOCIEDAD LIMITADA LABORAL|SOCIEDAD ANONIMA|S\.L\.|S\.L\.L\.|S\.A\.|S\.A\.A\.|S\.L\.L\.))?(?:\s*\(.+\))?\s*\.?$', company_social_denomination, re.IGNORECASE)
+                company_name_match = re.search(r'(.*?)(?:\s+(SOCIEDAD LIMITADA|SOCIEDAD LIMITADA EN LIQUIDACION|SL|SLL|SL EN LIQUIDACION|SLNE|SLNE EN LIQUIDACION|SA|SA EN LIQUIDACION|SOCIEDAD LIMITADA LABORAL|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA|SA|SOCIEDAD DE RESPONSABILIDAD LIMITADA|SOCIEDAD LIMITADA|SRL|SL|SOCIEDAD LIMITADA NUEVA EMPRESA|SLNE|SOCIEDAD LIMITADA PROFESIONAL|SLP|SOCIEDAD COOPERATIVA|SOCIEDAD LABORAL|SOCIEDAD COMANDITARIA POR ACCIONES|SCA|SOCIEDAD COMANDITARIA SIMPLE|SCS|SOCIEDAD CIVIL|COMUNIDAD DE BIENES|CB|UNIPERSONAL|EMPRESA INDIVIDUAL|AUTÓNOMO|SOCIEDAD ANÓNIMA LABORAL|SAL|S\.L\.|S\.L\.L\.|S\.A\.|S\.A\.A\.|S\.L\.L\.|SLP|S\.L\.P\.|SLP EN LIQUIDACION|S\.L\.P\. EN LIQUIDACION))?(?:\s*\(.+\))?\s*\.?$', company_social_denomination, re.IGNORECASE)
                 if company_name_match:
                     company_name = company_name_match.group(1).strip()
                 else:
@@ -100,9 +100,6 @@ def file_type_b(pdf_path):
     
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     inscriptions = extract_inscriptions_with_titles(texto_del_pdf, pdf_path)
-    
-    
-    
     
     # Extraer la fecha del Borme
     borme_date_pattern = r'(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\s+(\d+)\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})'
@@ -206,7 +203,7 @@ def file_type_b(pdf_path):
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/pruebas chicas/prueba_B/2009/02/11/pdfs/BORME-B-2009-28-48.pdf"
+    pdf_path = "files/pruebas chicas/prueba_AyB/2023/10/17/pdfs/BORME-B-2023-198-08.pdf"
     company = file_type_b(pdf_path)
     #texto_del_pdf = extract_text_from_pdf(pdf_path)
     #italic_titles = extract_italic_titles(pdf_path)

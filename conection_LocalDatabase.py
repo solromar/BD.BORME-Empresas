@@ -209,8 +209,20 @@ def procesar_pdfs_por_orden_y_tipo(directory, db, ruta_archivo_registros, ruta_a
                             for archivo in archivos:
                                 if archivo.startswith(('BORME-A', 'BORME-B')):
                                     procesar_pdf(db, ruta_archivo_registros, os.path.join(path_day, archivo), ruta_archivo_errores, archivos_procesados)
-                                    archivos_procesados_contador += 1
+                                    archivos_procesados_contador += 1   
 
+                    mes_actual_procesado = True
+            año_actual_procesado = True
+
+            if año_actual_procesado:
+                año_inicio = año_actual + 1
+                mes_inicio = 1  # Reiniciar mes al comienzo del siguiente año
+                día_inicio = 1  # Reiniciar día al comienzo del siguiente año
+            elif mes_actual_procesado:
+                mes_inicio = mes_actual + 1
+                día_inicio = 1  # Reiniciar día al comienzo del siguiente mes
+      
+                
     return archivos_procesados_contador
 
 

@@ -7,9 +7,6 @@ from Files_B import file_type_b
 database_name = "db_borme_empresas"
 DATABASE_URI = "mongodb+srv://smart-escrow:borme@atlascluster.u9utedk.mongodb.net/?retryWrites=true&w=majority"
 
-
-
-
 # ---------------------------------------------------- CONEXION A MONGO --------------------------------------------
 def dbConnection():
     try:
@@ -209,12 +206,9 @@ def procesar_pdfs_por_orden_y_tipo(directory, db, ruta_archivo_registros, ruta_a
                         if os.path.isdir(path_day):
                             archivos = sorted([f for f in os.listdir(path_day) if f.lower().endswith('.pdf')])
                             for archivo in archivos:
-                                if archivo.startswith('BORME-A'):
+                                if archivo.startswith(('BORME-A', 'BORME-B')):
                                     procesar_pdf(db, ruta_archivo_registros, os.path.join(path_day, archivo), ruta_archivo_errores, archivos_procesados)
-                                    archivos_procesados_contador += 1
-                                if archivo.startswith('BORME-B'):
-                                    procesar_pdf(db, ruta_archivo_registros, os.path.join(path_day, archivo), ruta_archivo_errores, archivos_procesados)
-                                    archivos_procesados_contador += 1    
+                                    archivos_procesados_contador += 1   
 
                     mes_actual_procesado = True
             año_actual_procesado = True
@@ -227,15 +221,13 @@ def procesar_pdfs_por_orden_y_tipo(directory, db, ruta_archivo_registros, ruta_a
                 mes_inicio = mes_actual + 1
                 día_inicio = 1  # Reiniciar día al comienzo del siguiente mes
       
-                #for archivo in archivos:
-                # if archivo.startswith(('BORME-B', 'BORME-C', 'BORME-S')) and not archivo.startswith('BORME-A'):
-                #    procesar_pdf(db, ruta_archivo_registros, os.path.join(path_day, archivo),ruta_archivo_errores, archivos_procesados)
+                
     return archivos_procesados_contador
 
 
 
 if __name__ == '__main__':
-    directory = '/home/soledad/BD.BORME-Empresas/files/pruebas chicas/prueba_A'
+    directory = '/home/soledad/BD.BORME-Empresas/files/pruebas chicas/prueba_AyB'
     db = dbConnection()
     ruta_archivo_registros = '/home/soledad/BD.BORME-Empresas/files/ultimo_archivo_procesadoAyB.txt'
     ruta_archivo_errores = '/home/soledad/BD.BORME-Empresas/files/archivos_con_errorAyB.txt'

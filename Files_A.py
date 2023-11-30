@@ -114,7 +114,7 @@ def file_type_a(pdf_path):
         else:
          company_social_denomination = 'Denominación no encontrada'
     # Expresión regular para buscar solo el nombre de la empresa (sin SL, Sociedad Limitada, etc.)
-        name_pattern = r'^\d+ - (.*?)(?:,? (SOCIEDAD LIMITADA|SL|SLL|SL EN LIQUIDACION|SLNE|SLNE EN LIQUIDACION|SA|SA EN LIQUIDACION|SOCIEDAD LIMITADA LABORAL|SOCIEDAD ANONIMA|S\.L\.|S\.L\.L\.|S\.A\.|S\.A\.A\.|S\.L\.L\.))?\.\n'
+        name_pattern = r'^\d+ - (.*?)(?:,? (SOCIEDAD LIMITADA|SOCIEDAD LIMITADA EN LIQUIDACION|SL|SLL|SL EN LIQUIDACION|SLNE|SLNE EN LIQUIDACION|SA|SA EN LIQUIDACION|SOCIEDAD LIMITADA LABORAL|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA|SA|SOCIEDAD DE RESPONSABILIDAD LIMITADA|SOCIEDAD LIMITADA|SRL|SL|SOCIEDAD LIMITADA NUEVA EMPRESA|SLNE|SOCIEDAD LIMITADA PROFESIONAL|SLP|SOCIEDAD COOPERATIVA|SOCIEDAD LABORAL|SOCIEDAD COMANDITARIA POR ACCIONES|SCA|SOCIEDAD COMANDITARIA SIMPLE|SCS|SOCIEDAD CIVIL|COMUNIDAD DE BIENES|CB|UNIPERSONAL|EMPRESA INDIVIDUAL|AUTÓNOMO|SOCIEDAD ANÓNIMA LABORAL|SAL|S\.L\.|S\.L\.L\.|S\.A\.|S\.A\.A\.|S\.L\.L\.|SLP|S\.L\.P\.|SLP EN LIQUIDACION|S\.L\.P\. EN LIQUIDACION))?\.\n'
         name_match = re.search(name_pattern, inscription, re.IGNORECASE)
     
         if name_match:
@@ -273,7 +273,7 @@ def file_type_a(pdf_path):
 #"""
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/prueba_A/2010/11/02/pdfs/BORME-A-2010-210-13.pdf"
+    pdf_path = "files/pruebas chicas/prueba_AyB/2010/11/02/pdfs/BORME-A-2010-210-13.pdf"
     #texto_del_pdf = extract_text_from_pdf(pdf_path)
     #boldWords = extract_bold_text(pdf_path)
     company = file_type_a(pdf_path)
