@@ -43,17 +43,11 @@ def procesar_blobs_por_orden_y_tipo(blob_service_client, container_name, año_in
 
 # Llamar a la función con los parámetros apropiados
 
-
-
-
-
-
-
 # ---------------------------------------------------- MAIN ----------------------------------------------------------
 if __name__ == '__main__':
     blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
 
     # Estos valores deberían ser obtenidos de tu archivo de registros
-    año_inicio, mes_inicio, día_inicio = 2023, 1, 2  # Ajustar según tus necesidades
+    año_inicio, mes_inicio, día_inicio = 2023, 1, 2  # Ajustar según  necesidades
 
     procesar_blobs_por_orden_y_tipo(blob_service_client, CONTAINER_NAME, año_inicio, mes_inicio, día_inicio)

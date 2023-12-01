@@ -25,10 +25,6 @@ def file_type_c(pdf_path):
     
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     
-    print(texto_del_pdf)
-    
-    
-    
     # Extraer la fecha del Borme
     borme_date_pattern = r'(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\s+(\d+)\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})'
     borme_date_match = re.search(borme_date_pattern, texto_del_pdf)
@@ -53,14 +49,21 @@ def file_type_c(pdf_path):
     inscription_section = inscription_section_match.group(1) if inscription_section_match else "No encontrado"
     
     # Buscar Categoria del Acto
-    inscription_category_pattern = r"SECCIÓN SEGUNDA - Anuncios y avisos legales\s+(.*?)\n[A-Z0-9]"
+    inscription_category_pattern = r"SECCIÓN SEGUNDA -\s(.*?)\n"
     inscription_category_match = re.search(inscription_category_pattern, texto_del_pdf)
-    inscription_category = inscription_category_match.group(1) if inscription_category_match else "No encontrado"
+    inscription_category = inscription_category_match.group(1) if inscription_category_match else "No encontrado"    
+    
+    # Buscar Nombre del Acto
+    inscription_name_pattern = r"SECCIÓN SEGUNDA - Anuncios y avisos legales\s+(.*?)\n[A-Z0-9]"
+    inscription_name_match = re.search(inscription_name_pattern, texto_del_pdf)
+    inscription_name = inscription_name_match.group(1) if inscription_name_match else "No encontrado"
     
     # Expresión regular para capturar cada acto en un texto plano
-    inscription_pattern = r"SECCIÓN SEGUNDA - Anuncios y avisos legales\s+(.*?)\nhttp://www.boe.es"
+    inscription_pattern = r"SECCIÓN SEGUNDA - Anuncios y avisos legales\s+(.*?)\nID:"
     inscription_matches = re.search(inscription_pattern, texto_del_pdf, re.MULTILINE | re.DOTALL)
     inscription = inscription_matches.group(1) if inscription_matches else "No encontrado"
+   
+    
     
     # Extraer la fecha de la inscripcion
     inscription_date_original_pattern = r'(\d{1,2} de [a-z]+ de \d{4})\.-'
@@ -95,6 +98,13 @@ def file_type_c(pdf_path):
      company_social_denomination = " ".join(company_social_denomination_match.group(1).split()).replace(',', ', ')
     else:
      company_social_denomination = "No encontrado"
+     
+     
+     
+#----------------------------------------------------------------------------------------------------------------------- 
+   
+    
+# ------------------------------------------------------------------------------------------------------------------------    
     
     company_inscription = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -103,7 +113,7 @@ def file_type_c(pdf_path):
                 "inscriptionNumber": inscription_number,
                 "inscriptionSection": inscription_section,
                 "inscriptionCategory": inscription_category,
-                #"inscriptionName": inscription_name,
+                "inscriptionName": inscription_name,
                 "inscriptionDate": inscription_date,
                 "inscriptionRegistryData": None,
                 "inscription": inscription,
@@ -152,7 +162,7 @@ def file_type_c(pdf_path):
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35132.pdf"
+    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35121.pdf"
     company = file_type_c(pdf_path)
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     
