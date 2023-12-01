@@ -62,8 +62,6 @@ def file_type_c(pdf_path):
     inscription_pattern = r"SECCIÓN SEGUNDA - Anuncios y avisos legales\s+(.*?)\nID:"
     inscription_matches = re.search(inscription_pattern, texto_del_pdf, re.MULTILINE | re.DOTALL)
     inscription = inscription_matches.group(1) if inscription_matches else "No encontrado"
-   
-    
     
     # Extraer la fecha de la inscripcion
     inscription_date_original_pattern = r'(\d{1,2} de [a-z]+ de \d{4})\.-'
@@ -91,7 +89,7 @@ def file_type_c(pdf_path):
     inscription_number= inscription_number_match.group(1)if inscription_number_match else "No encontrado"
     
     # Expresión regular para capturar el nombre de la empresa en mayúsculas
-    company_social_denomination_pattern = r'^\d+\s+((?:[A-ZÁÉÍÓÚÑ\s]+(?:,|\n))*[A-ZÁÉÍÓÚÑ\s]+(?:SOCIEDAD ANÓNIMA|S\.A\.|SOCIEDAD LIMITADA|S\.L\.|S\.L\.L\.|SOCIEDAD LIMITADA PROFESIONAL|S\.L\.P\.|ETC))'
+    company_social_denomination_pattern = r'\d+\s+([A-ZÁÉÍÓÚÑ\s\d&.,-]+?)\s*(?:\n(?=\d+\s+[A-Z][a-z])|$)'
     company_social_denomination_match = re.search(company_social_denomination_pattern, inscription, re.MULTILINE | re.DOTALL)
 
     if company_social_denomination_match:
@@ -99,7 +97,7 @@ def file_type_c(pdf_path):
     else:
      company_social_denomination = "No encontrado"
      
-     
+    # TODO: hacer company_name
      
 #----------------------------------------------------------------------------------------------------------------------- 
    
@@ -162,7 +160,7 @@ def file_type_c(pdf_path):
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35121.pdf"
+    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35035.pdf"
     company = file_type_c(pdf_path)
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     
