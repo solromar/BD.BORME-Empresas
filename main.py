@@ -13,16 +13,12 @@ def extract_text_from_pdf(pdf_path):
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
             text += page.extract_text()
-    return text
-
-
-    
+    return text    
    
 # -------------------------------------------------- PROCESAMIENTO BORME C --------------------------------------------------------------
 
 def file_type_c(pdf_path):
-    companies = []
-    
+    companies = []    
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     
     # Extraer la fecha del Borme
@@ -88,16 +84,18 @@ def file_type_c(pdf_path):
     inscription_number_match = re.search(inscription_number_pattern, inscription, re.MULTILINE)
     inscription_number= inscription_number_match.group(1)if inscription_number_match else "No encontrado"
     
-    # Expresión regular para capturar el nombre de la empresa en mayúsculas
-    company_social_denomination_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑ\s\d&.,()-]+?)\n(?:Hago saber|Los|Hace saber|Emisión|Edicto\.|Convocatoria de|La Junta general)'
-    
-    company_social_denomination_match = re.search(company_social_denomination_pattern, inscription, re.MULTILINE | re.DOTALL)
-    if company_social_denomination_match:
-     company_social_denomination = " ".join(company_social_denomination_match.group(1).split()).replace(',', ', ')
+    # Expresión regular para capturar el bloque de nombre/s de sociedad/es
+    company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑ\s\d&.,()\x27-]+?)\n(?:[A-Z][a-z]|D\.|D\.ª|M\.|M\.ª)'
+    company_social_denomination_block_match = re.search(company_social_denomination_block_pattern, inscription, re.MULTILINE | re.DOTALL)
+    if company_social_denomination_block_match:
+     company_social_denomination_block = " ".join(company_social_denomination_block_match.group(1).split()).replace(',', ', ')
     else:
-     company_social_denomination = "No encontrado"
+     company_social_denomination_block = "No encontrado"
      
     # TODO: hacer company_name
+    
+
+  
      
 #----------------------------------------------------------------------------------------------------------------------- 
    
@@ -122,7 +120,7 @@ def file_type_c(pdf_path):
     company = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "companySocialDenomination": company_social_denomination,
+                "companySocialDenomination BLOQUE": company_social_denomination_block,
                 "texto PDF": texto_del_pdf,
                 #"companyName": company_name,
                 "companyNif": None,
@@ -160,7 +158,7 @@ def file_type_c(pdf_path):
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35132.pdf"
+    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35134.pdf"
     company = file_type_c(pdf_path)
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     
