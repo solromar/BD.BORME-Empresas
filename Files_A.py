@@ -270,7 +270,7 @@ def file_type_a(pdf_path):
 
     return companies
 
-#"""
+
 @app.route('/')  # Defino la ruta
 def home():
     pdf_path = "files/pruebas chicas/prueba_AyB/2010/11/02/pdfs/BORME-A-2010-210-13.pdf"
@@ -283,4 +283,4 @@ def home():
 
 if __name__ == '__main__':
     app.run(debug=True)
-#"""
+

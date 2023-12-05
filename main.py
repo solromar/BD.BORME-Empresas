@@ -14,12 +14,30 @@ def extract_text_from_pdf(pdf_path):
         for page in pdf.pages:
             text += page.extract_text()
     return text    
+
+def extract_company_block(inscription):
+    company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑ\s\d&.,()\x27-]+?)\n(?:[A-Z][a-z]|D\.|D\.ª|M\.|M\.ª)'
+    company_social_denomination_block_match = re.search(company_social_denomination_block_pattern, inscription, re.MULTILINE | re.DOTALL)
+    if company_social_denomination_block_match:
+        company_social_denomination_block = " ".join(company_social_denomination_block_match.group(1).split()).replace(',', ', ')
+    return company_social_denomination_block
+
+
+def process_company_block(company_block):
+    # Dividir la cadena usando ' Y ' como delimitador
+    company_social_denomination_list = re.split(r'\s+Y\s+', company_block)
+
+    # Limpiar y filtrar la lista para eliminar elementos vacíos o espacios adicionales
+    company_social_denomination_list = [social_denomination.strip() for social_denomination in company_social_denomination_list if social_denomination]
+
+    return company_social_denomination_list         
    
 # -------------------------------------------------- PROCESAMIENTO BORME C --------------------------------------------------------------
 
 def file_type_c(pdf_path):
     companies = []    
     texto_del_pdf = extract_text_from_pdf(pdf_path)
+    
     
     # Extraer la fecha del Borme
     borme_date_pattern = r'(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\s+(\d+)\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})'
@@ -84,25 +102,20 @@ def file_type_c(pdf_path):
     inscription_number_match = re.search(inscription_number_pattern, inscription, re.MULTILINE)
     inscription_number= inscription_number_match.group(1)if inscription_number_match else "No encontrado"
     
-    # Expresión regular para capturar el bloque de nombre/s de sociedad/es
+     
+    # TODO: hacer company_name
+   
+       
+    
     company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑ\s\d&.,()\x27-]+?)\n(?:[A-Z][a-z]|D\.|D\.ª|M\.|M\.ª)'
     company_social_denomination_block_match = re.search(company_social_denomination_block_pattern, inscription, re.MULTILINE | re.DOTALL)
     if company_social_denomination_block_match:
-     company_social_denomination_block = " ".join(company_social_denomination_block_match.group(1).split()).replace(',', ', ')
-    else:
-     company_social_denomination_block = "No encontrado"
-     
-    # TODO: hacer company_name
+        company_block = company_social_denomination_block_match.group(1)
+        company_social_denomination_list = process_company_block(company_block)
+        print(company_social_denomination_list)
     
-
-  
-     
-#----------------------------------------------------------------------------------------------------------------------- 
-   
-    
-# ------------------------------------------------------------------------------------------------------------------------    
-    
-    company_inscription = {
+         
+        company_inscription = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "inscriptionCommercialRegistry": None,
@@ -115,13 +128,14 @@ def file_type_c(pdf_path):
                 "inscription": inscription,
                 "bormeDate": borme_date,
                 "inscriptionFile": os.path.basename(pdf_path)
-            }
-
-    company = {
+            } 
+    
+    companies = []  # Asegúrate de que esto esté fuera del bucle 
+    for company_social_denomination in company_social_denomination_list:
+        company = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "companySocialDenomination BLOQUE": company_social_denomination_block,
-                "texto PDF": texto_del_pdf,
+                "companySocialDenomination": company_social_denomination,
                 #"companyName": company_name,
                 "companyNif": None,
                 "companyCurrentAddress": None,
@@ -150,15 +164,17 @@ def file_type_c(pdf_path):
                 "administrationAppointmentFile": None,
                 "companyInscription": [company_inscription]
             }
-
-    companies.append(company)
-
+        companies.append(company)
+   
+    
+    #print(f"Agregado: {company}")  # Para depuración
+    print("Compañías procesadas:", companies)
     return companies
-
+    
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35134.pdf"
+    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35104.pdf"
     company = file_type_c(pdf_path)
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     
