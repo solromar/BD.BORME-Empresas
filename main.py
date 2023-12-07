@@ -26,15 +26,19 @@ def process_company_block(company_block):
     # Reemplazar comas y saltos de línea con dos espacios
     company_block = company_block.replace(',\n', '  ').replace('\n', '  ').replace(',', '  ')
     company_block = re.sub(r'\bE\b', ' ', company_block)
+    
+    # Eliminar contenido específico entre paréntesis
+    phrases_to_exclude = r'\((SOCIEDAD ABSORBENTE|SOCIEDAD ABSORBIDA|SOCIEDADES ABSORBIDAS|SOCIEDAD BENEFICIARIA|SOCIEDAD ESCINDIDA|SOCIEDAD PARCIALMENTE ESCINDIDA|SOCIEDAD SEGREGADA|)[^)]*\)\.?'
+    company_block = re.sub(phrases_to_exclude, '', company_block)
 
     # Definir la expresión regular para tipos de sociedades seguidos por ' Y '
-    company_types_and_y_pattern = r'(S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA|SOCIEDAD ANÓNIMA UNIPERSONAL)(\s+Y\s+)'
+    company_types_and_y_pattern = r'(S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.| S\.L\.U\.| S\.A\.U\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA|SOCIEDAD ANÓNIMA UNIPERSONAL)(\s+Y\s+)'
 
     # Reemplazar ' Y ' que sigue a un tipo de sociedad con un espacio
     company_block = re.sub(company_types_and_y_pattern, r'\1 ', company_block)
 
     # Definir la expresión regular para tipos de sociedades
-    company_types_pattern = r'(S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA| SOCIEDAD ANÓNIMA UNIPERSONAL)'
+    company_types_pattern = r'(S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.| S\.L\.U\.| S\.A\.U\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA| SOCIEDAD ANÓNIMA UNIPERSONAL)'
 
     # Dividir la cadena usando los tipos de sociedades como delimitador
     parts = re.split(company_types_pattern, company_block)
@@ -194,7 +198,7 @@ def file_type_c(pdf_path):
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-34996.pdf"
+    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35032.pdf"
     company = file_type_c(pdf_path)
     texto_del_pdf = extract_text_from_pdf(pdf_path)
     
