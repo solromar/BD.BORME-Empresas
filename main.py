@@ -16,30 +16,32 @@ def extract_text_from_pdf(pdf_path):
     return text    
 
 def extract_company_block(inscription):
-    company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑÀÈÌÒÙ´’\s\d&.,()\x27-]+?)\n(?:[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|D\.|D\.ª|M\.|M\.ª|Dña\.|\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ]{2}\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|A\s+[a-záéíóúñàèìòù]|1\.\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù])'
-    #company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑÀÈÌÒÙ´\s\d&.,()\'\x27-]+(?:\sST\.)?)[^)]*?\n(?:[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|D\.|D\.ª|M\.|M\.ª|Dña\.|\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ]{2}\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|A\s+[a-záéíóúñàèìòù]|1\.\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù])'
-
+    company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑÀÈÌÒÙ´’"\s\d&.,()\x27-]+?)\n(?:[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|D\.|D\.ª|M\.|M\.ª|Dña\.|\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ]{2}\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|A\s+[a-záéíóúñàèìòù]|1\.\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|ANUNCIO DE FUSIÓN)'
     company_social_denomination_block_match = re.search(company_social_denomination_block_pattern, inscription, re.MULTILINE | re.DOTALL)
     if company_social_denomination_block_match:
         company_social_denomination_block = " ".join(company_social_denomination_block_match.group(1).split()).replace(',', ', ')
     return company_social_denomination_block
 
 def process_company_block(company_block):
-    # Reemplazar comas y saltos de línea con dos espacios
-    company_block = company_block.replace(',\n', '  ').replace('\n', '  ').replace(',', '  ')
+    print("Apenas Empezamos:", company_block)
+    # Reemplazar comas, comillas y saltos de línea con dos espacios
+    company_block = company_block.replace(',\n', '  ').replace('\n', '  ').replace(',', '  ').replace('"', ' ')
     
+          
     # Eliminar contenido específico entre paréntesis
     phrases_to_exclude = r'\((SOCIEDAD ABSORBENTE|SOCIEDAD ABSORBIDA|SOCIEDADES ABSORBIDAS|SOCIEDAD BENEFICIARIA|SOCIEDAD ESCINDIDA|SOCIEDAD PARCIALMENTE ESCINDIDA|SOCIEDAD SEGREGADA|)[^)]*\)\.?'
-    company_block = re.sub(phrases_to_exclude, '', company_block)
+    company_block = re.sub(phrases_to_exclude, '', company_block) 
+    print("antes de Y E:", company_block)  
 
     # Definir la expresión regular para tipos de sociedades y 'Y' o 'E' como separadores
-    company_types_and_y_e_pattern = r'(S\.L\.U\.|S\.A\.U\.|S\.L\.P\.| S\.L\. SOCIEDAD UNIPERSONAL|S\.A\. SOCIEDAD UNIPERSONAL|S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA)(\s+(Y|E)\s+)'
-
+    company_types_and_y_e_pattern = r'(S\.L\.U\.|S\.A\.U\.|S\.L\.P\.| S\.L\. SOCIEDAD UNIPERSONAL|S\.A\.   SOCIEDAD UNIPERSONAL |S\.A\.  SOCIEDAD UNIPERSONAL|S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA)(\s+(Y|E)\s+)|\s+E\s+'
+    
     # Reemplazar 'Y' o 'E' que sigue a un tipo de sociedad con un espacio
     company_block = re.sub(company_types_and_y_e_pattern, r'\1 ', company_block)
+    print("luego reemplazar la Y E por espacio:", company_block)
 
     # Definir la expresión regular para tipos de sociedades
-    company_types_pattern = r'(S\.L\.U\.|SCR, S\.A\.|S\.A\.U\.|S\.C\.P\.|S\.L\.P\.|S\.A\.L\.| S\.L\. SOCIEDAD UNIPERSONAL|S\.L\.  SOCIEDAD UNIPERSONAL|S\.A\. SOCIEDAD UNIPERSONAL|SOCIEDAD ANÓNIMA UNIPERSONAL|S\.L\.|S\.L|S\.A\.|S\. A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA| SOCIEDAD LIMITADA LABORAL|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA| SOCIEDAD LIMITADA UNIPERSONAL|SOCIEDAD COOPERATIVA ANDALUZA)'
+    company_types_pattern = r'(S\.L\.U\.|SCR, S\.A\.|S\.A\.U\.|S\.C\.P\.|S\.L\.P\.|S\.A\.L\.|SOCIETAT ANÒNIMA|S\.A\.   SOCIEDAD UNIPERSONAL | S\.L\. SOCIEDAD UNIPERSONAL|S\.L\.  SOCIEDAD UNIPERSONAL|S\.A\. SOCIEDAD UNIPERSONAL|S\.A\.,  SOCIEDAD UNIPERSONAL|SOCIEDAD ANÓNIMA UNIPERSONAL|S\.L\.|S\.L|S\.A\.|S\. A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA| SOCIEDAD LIMITADA LABORAL|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA| SOCIEDAD LIMITADA UNIPERSONAL|SOCIEDAD COOPERATIVA ANDALUZA)'
 
     # Dividir la cadena usando los tipos de sociedades como delimitador
     company_social_denomination_list = re.split(company_types_pattern, company_block)
@@ -55,7 +57,6 @@ def process_company_block(company_block):
             full_name = f"{name} {type}" if type else name
             processed_companies.append(full_name)
             company_names.append(name)
-            print(processed_companies,company_names )
 
     return processed_companies, company_names
 
@@ -132,9 +133,9 @@ def file_type_c(pdf_path):
        
     
     
-    company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑÀÈÌÒÙ´’\s\d&.,()\x27-]+?)\n(?:[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|D\.|D\.ª|M\.|M\.ª|Dña\.|\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ]{2}\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|A\s+[a-záéíóúñàèìòù]|1\.\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù])'
     
-    #company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑÀÈÌÒÙ´\s\d&.,()\'\x27-]+(?:\sST\.)?)[^)]*?\n(?:[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|D\.|D\.ª|M\.|M\.ª|Dña\.|\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ]{2}\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|A\s+[a-záéíóúñàèìòù]|1\.\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù])'
+    company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑÀÈÌÒÙ´’"\s\d&.,()\x27-]+?)\n(?:[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|D\.|D\.ª|M\.|M\.ª|Dña\.|\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ]{2}\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|A\s+[a-záéíóúñàèìòù]|1\.\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|ANUNCIO DE FUSIÓN)'
+
     company_social_denomination_block_match = re.search(company_social_denomination_block_pattern, inscription, re.MULTILINE | re.DOTALL)
     if company_social_denomination_block_match:
         company_block = company_social_denomination_block_match.group(1)
@@ -198,7 +199,7 @@ def file_type_c(pdf_path):
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/2023/10/26/pdfs/BORME-C-2023-6352.pdf"
+    pdf_path = "files/2023/10/25/pdfs/BORME-C-2023-6326.pdf"
     company = file_type_c(pdf_path)
     
     return jsonify(company)
