@@ -19,43 +19,43 @@ def extract_company_block(inscription):
     company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑ\s\d&.,()\x27-]+?)\n(?:[A-Z][a-z]|D\.|D\.ª|M\.|M\.ª)'
     company_social_denomination_block_match = re.search(company_social_denomination_block_pattern, inscription, re.MULTILINE | re.DOTALL)
     if company_social_denomination_block_match:
-        company_social_denomination_block = " ".join(company_social_denomination_block_match.group(1).split()).replace(',', ', ')
+        company_social_denomination_block = " ".join(company_social_denomination_block_match.group(1).split()).replace(',', ', ')        
     return company_social_denomination_block
+    
 
 def process_company_block(company_block):
     # Reemplazar comas y saltos de línea con dos espacios
     company_block = company_block.replace(',\n', '  ').replace('\n', '  ').replace(',', '  ')
-    company_block = re.sub(r'\bE\b', ' ', company_block)
     
     # Eliminar contenido específico entre paréntesis
     phrases_to_exclude = r'\((SOCIEDAD ABSORBENTE|SOCIEDAD ABSORBIDA|SOCIEDADES ABSORBIDAS|SOCIEDAD BENEFICIARIA|SOCIEDAD ESCINDIDA|SOCIEDAD PARCIALMENTE ESCINDIDA|SOCIEDAD SEGREGADA|)[^)]*\)\.?'
     company_block = re.sub(phrases_to_exclude, '', company_block)
 
-    # Definir la expresión regular para tipos de sociedades seguidos por ' Y '
-    company_types_and_y_pattern = r'(S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.| S\.L\.U\.| S\.A\.U\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA|SOCIEDAD ANÓNIMA UNIPERSONAL)(\s+Y\s+)'
+    # Definir la expresión regular para tipos de sociedades y 'Y' o 'E' como separadores
+    company_types_and_y_e_pattern = r'(S\.L\.U\.|S\.A\.U\.|S\.L\.P\.| S\.L\. SOCIEDAD UNIPERSONAL|S\.A\. SOCIEDAD UNIPERSONAL|S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA)(\s+(Y|E)\s+)'
 
-    # Reemplazar ' Y ' que sigue a un tipo de sociedad con un espacio
-    company_block = re.sub(company_types_and_y_pattern, r'\1 ', company_block)
+    # Reemplazar 'Y' o 'E' que sigue a un tipo de sociedad con un espacio
+    company_block = re.sub(company_types_and_y_e_pattern, r'\1 ', company_block)
 
     # Definir la expresión regular para tipos de sociedades
-    company_types_pattern = r'(S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.| S\.L\.U\.| S\.A\.U\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA| SOCIEDAD ANÓNIMA UNIPERSONAL)'
+    company_types_pattern = r'(S\.L\.U\.|S\.A\.U\.|S\.L\.P\.| S\.L\. SOCIEDAD UNIPERSONAL|S\.L\. SOCIEDAD UNIPERSONAL|S\.A\. SOCIEDAD UNIPERSONAL|S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA)'
 
     # Dividir la cadena usando los tipos de sociedades como delimitador
-    parts = re.split(company_types_pattern, company_block)
+    company_social_denomination_list = re.split(company_types_pattern, company_block)
 
-    # Reconstruir cada compañía
+    # Reconstruir cada compañía y filtrar nombres no válidos o vacíos
     processed_companies = []
-    for i in range(0, len(parts), 2):
-        name = parts[i].strip()
-        type = parts[i + 1].strip() if i + 1 < len(parts) else ''
+    company_names = []
+    for i in range(0, len(company_social_denomination_list), 2):
+        name = company_social_denomination_list[i].strip()
+        type = company_social_denomination_list[i + 1].strip() if i + 1 < len(company_social_denomination_list) else ''
 
-        # Si el fragmento no tiene un tipo de sociedad, se considera una entidad única
-        if name and not type:
-            processed_companies.append(name)
-        elif name and type:
-            processed_companies.append(f"{name} {type}")
+        if name and name != ".":
+            full_name = f"{name} {type}" if type else name
+            processed_companies.append(full_name)
+            company_names.append(name)
 
-    return processed_companies
+    return processed_companies, company_names
 
 
 # -------------------------------------------------- PROCESAMIENTO BORME C --------------------------------------------------------------
@@ -126,22 +126,18 @@ def file_type_c(pdf_path):
     # Extraer el número de acto
     inscription_number_pattern = r'^(\d+)'
     inscription_number_match = re.search(inscription_number_pattern, inscription, re.MULTILINE)
-    inscription_number= inscription_number_match.group(1)if inscription_number_match else "No encontrado"
-    
-     
-    # TODO: hacer company_name
-   
+    inscription_number= inscription_number_match.group(1)if inscription_number_match else "No encontrado"   
        
     
     company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑ\s\d&.,()\x27-]+?)\n(?:[A-Z][a-z]|D\.|D\.ª|M\.|M\.ª)'
     company_social_denomination_block_match = re.search(company_social_denomination_block_pattern, inscription, re.MULTILINE | re.DOTALL)
     if company_social_denomination_block_match:
         company_block = company_social_denomination_block_match.group(1)
-        company_social_denomination_list = process_company_block(company_block)
-        print(company_social_denomination_list)
+        full_company_names, company_names = process_company_block(company_block)
+        
     
          
-        company_inscription = {
+    company_inscription = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "inscriptionCommercialRegistry": None,
@@ -157,12 +153,12 @@ def file_type_c(pdf_path):
             } 
     
     companies = []  
-    for company_social_denomination in company_social_denomination_list:
-        company = {
+    for company_social_denomination, company_name in zip(full_company_names, company_names):
+     company = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "companySocialDenomination": company_social_denomination,
-                #"companyName": company_name,
+                "companyName": company_name,
                 "companyNif": None,
                 "companyCurrentAddress": None,
                 "companyCurrentSocialObject": None,
@@ -190,7 +186,7 @@ def file_type_c(pdf_path):
                 "administrationAppointmentFile": None,
                 "companyInscription": [company_inscription]
             }
-        companies.append(company)
+    companies.append(company)
    
     
     return companies
@@ -198,10 +194,8 @@ def file_type_c(pdf_path):
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-35032.pdf"
+    pdf_path = "files/2023/10/09/pdfs/BORME-C-2023-6043.pdf"
     company = file_type_c(pdf_path)
-    texto_del_pdf = extract_text_from_pdf(pdf_path)
-    
     
     return jsonify(company)
 
