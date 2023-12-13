@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 from Files_A import file_type_a
 from Files_B import file_type_b
+from Files_C import file_type_c
 
 database_name = "db_borme_empresas"
 DATABASE_URI = "mongodb+srv://smart-escrow:borme@atlascluster.u9utedk.mongodb.net/?retryWrites=true&w=majority"
@@ -87,6 +88,8 @@ def procesar_pdf(db, ruta_archivo_registros, pdf_path,ruta_archivo_errores, arch
             data_to_insert = file_type_a(pdf_path)
         elif nombre_archivo.startswith('BORME-B'):
             data_to_insert = file_type_b(pdf_path)
+        elif nombre_archivo.startswith('BORME-C'):
+            data_to_insert = file_type_c(pdf_path)    
         else:
             raise ValueError(f"Tipo de archivo desconocido: {nombre_archivo}")
         
@@ -136,6 +139,8 @@ def procesar_pdf(db, ruta_archivo_registros, pdf_path, ruta_archivo_errores, arc
             data_to_insert = file_type_a(pdf_path)
         elif nombre_archivo.startswith('BORME-B'):
             data_to_insert = file_type_b(pdf_path)
+        elif nombre_archivo.startswith('BORME-C'):
+            data_to_insert = file_type_c(pdf_path)    
         else:
             raise ValueError(f"Tipo de archivo desconocido: {nombre_archivo}")
         
@@ -176,12 +181,10 @@ def obtener_fecha_inicio_procesamiento(última_fecha_procesada):
 
 # ----------------------------------------------------   -------------------------------------------- 
 # Procesa archivos PDF en un directorio específico, ordenándolos por año, mes y día.
-# Maneja archivos de tipo 'BORME-A', 'BORME-B', 'BORME-C' y 'BORME-S', aunque actualmente solo procesa archivos 'BORME-A'.
+# Maneja archivos de tipo 'BORME-A', 'BORME-B', 'BORME-C' y 'BORME-S'
 
 def procesar_pdfs_por_orden_y_tipo(directory, db, ruta_archivo_registros, ruta_archivo_errores, archivos_procesados, año_inicio, mes_inicio, día_inicio):
     archivos_procesados_contador = 0
-    año_actual_procesado = False
-    mes_actual_procesado = False
 
     for year in sorted(os.listdir(directory)):
         año_actual = int(year)
@@ -206,7 +209,7 @@ def procesar_pdfs_por_orden_y_tipo(directory, db, ruta_archivo_registros, ruta_a
                         if os.path.isdir(path_day):
                             archivos = sorted([f for f in os.listdir(path_day) if f.lower().endswith('.pdf')])
                             for archivo in archivos:
-                                if archivo.startswith(('BORME-A', 'BORME-B')):
+                                if archivo.startswith(('BORME-A', 'BORME-B', 'BORME-C')):
                                     procesar_pdf(db, ruta_archivo_registros, os.path.join(path_day, archivo), ruta_archivo_errores, archivos_procesados)
                                     archivos_procesados_contador += 1   
 
@@ -229,8 +232,8 @@ def procesar_pdfs_por_orden_y_tipo(directory, db, ruta_archivo_registros, ruta_a
 if __name__ == '__main__':
     directory = '/home/soledad/BD.BORME-Empresas/files/pruebas chicas/prueba_AyB'
     db = dbConnection()
-    ruta_archivo_registros = '/home/soledad/BD.BORME-Empresas/files/ultimo_archivo_procesadoAyB.txt'
-    ruta_archivo_errores = '/home/soledad/BD.BORME-Empresas/files/archivos_con_errorAyB.txt'
+    ruta_archivo_registros = '/home/soledad/BD.BORME-Empresas/files/ultimo_archivo_procesadoAtlas.txt'
+    ruta_archivo_errores = '/home/soledad/BD.BORME-Empresas/files/archivos_con_errorAtlas.txt'
     archivos_procesados = cargar_archivos_procesados(ruta_archivo_registros)
     # Obtener el año y mes del último archivo procesado
     archivos_procesados_en_esta_ejecución = 0

@@ -16,36 +16,34 @@ def extract_text_from_pdf(pdf_path):
     return text    
 
 def extract_company_block(inscription):
-    company_social_denomination_block_pattern = r'\"([A-ZÁÉÍÓÚÑÀÈÌÒÙ`´&.,()\x27\u2019\s\d-]+?\s*(?:S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|S\.L\.U\.|S\.A\.U\.|SOCIEDAD LIMITADA|SOCIEDAD ANÓNIMA|ETC)\.?)"(?:\s+Y\s+\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ`´&.,()\x27\u2019\s\d-]+?\s*(?:S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|S\.L\.U\.|S\.A\.U\.|S\.L\.P\.|SOCIEDAD LIMITADA|SOCIEDAD ANÓNIMA|ETC)\.?")?'
+    company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑÀÈÌÒÙÄËÏÖÜ´’ºNº"\s\d&.,;·()\x27-]+?)\n(?:[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|D\.|D\.ª|M\.|M\.ª|Dña\.|\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ]{2}\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|A\s+[a-záéíóúñàèìòù]|1\.\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|ANUNCIO DE FUSIÓN|ISABEL GARRUCHO SANCHEZ)'
     company_social_denomination_block_match = re.search(company_social_denomination_block_pattern, inscription, re.MULTILINE | re.DOTALL)
     if company_social_denomination_block_match:
         company_social_denomination_block = " ".join(company_social_denomination_block_match.group(1).split()).replace(',', ', ')
     return company_social_denomination_block
-        
 
 def process_company_block(company_block):
-    print("Texto original:", company_block)
-    # Reemplazar comas y saltos de línea con dos espacios
-    company_block = company_block.replace(',\n', '  ').replace('\n', '  ').replace(',', '  ')
-    
+    print ("Al inicio", company_block)
+    # Reemplazar comas, comillas y saltos de línea con dos espacios
+    company_block = company_block.replace(',\n', '  ').replace('\n', '  ').replace(',', '  ').replace('"', ' ').replace(';', '  ')
+    print ("borrar comas comillas etc", company_block)
+          
     # Eliminar contenido específico entre paréntesis
-    phrases_to_exclude = r'\((SOCIEDAD\s+ABSORBENTE|SOCIEDAD\s+ABSORBIDA|SOCIEDADES\s+ABSORBIDAS|SOCIEDAD\s+BENEFICIARIA|SOCIEDAD\s+ESCINDIDA|SOCIEDAD\s+PARCIALMENTE\s+ESCINDIDA|SOCIEDAD\s+SEGREGADA)\b[^)]*\)\.?'
+    phrases_to_exclude = r'\((SOCIEDAD ABSORBENTE|SOCIEDAD ABSORBIDA|SOCIEDADES ABSORBIDAS|SOCIEDAD BENEFICIARIA|SOCIEDAD ESCINDIDA|SOCIEDAD PARCIALMENTE ESCINDIDA|SOCIEDAD TOTALMENTE  ESCINDIDA|SOCIEDAD SEGREGADA|SOCIEDAD CEDENTE|ENTIDAD CESIONARIA|SOCIEDADES  BENEFICIARIAS DE NUEVA CREACIÓN|SOCIEDADES BENEFICIARIAS DE NUEVA CREACIÓN)[^)]*\)\.?'
     company_block = re.sub(phrases_to_exclude, '', company_block)
-    print(company_block)
-
+    print ("frases excluidas", company_block)
     # Definir la expresión regular para tipos de sociedades y 'Y' o 'E' como separadores
-    company_types_and_y_e_pattern = r'(S\.L\.U\.|S\.A\.U\.|S\.L\.P\.| S\.L\. SOCIEDAD UNIPERSONAL|S\.A\. SOCIEDAD UNIPERSONAL|S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA)(\s+(Y|E)\s+)'
-
+    company_types_and_y_e_pattern = r'(S\.L\.U\.|S\.A\.U\.|S\.L\.P\.| S\.L\. SOCIEDAD UNIPERSONAL|S\.A\.   SOCIEDAD UNIPERSONAL |S\.A\.  SOCIEDAD UNIPERSONAL|S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA)(\s+(Y|E)\s+)|\s+E\s+'
+    
     # Reemplazar 'Y' o 'E' que sigue a un tipo de sociedad con un espacio
     company_block = re.sub(company_types_and_y_e_pattern, r'\1 ', company_block)
-    print("saca la E y la Y:", company_block)
 
     # Definir la expresión regular para tipos de sociedades
-    company_types_pattern = r'(S\.L\.U\.|S\.A\.U\.|S\.L\.P\.| S\.L\. SOCIEDAD UNIPERSONAL|S\.L\. SOCIEDAD UNIPERSONAL|S\.A\. SOCIEDAD UNIPERSONAL|S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA)'
+    company_types_pattern = r'(S\.L\.U\.|SCR, S\.A\.|S\.A\.U\.|S\.C\.P\.|S\.L\.P\.|S\.A\.L\.|SOCIETAT ANÒNIMA|S\.A\.   SOCIEDAD UNIPERSONAL | S\.L\. SOCIEDAD UNIPERSONAL|S\.L\.  SOCIEDAD UNIPERSONAL|S\.A\. SOCIEDAD UNIPERSONAL|S\.A\.,  SOCIEDAD UNIPERSONAL|SOCIEDAD ANÓNIMA UNIPERSONAL|S\.L\.|S\.L|S\.A\.|S\. A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|FRANQUICIA INMOBILIARIA|SOCIEDAD LIMITADA| SOCIEDAD LIMITADA LABORAL|COMUNIDAD DE BIENES|SOCIEDAD ANONIMA|SOCIEDAD ANÓNIMA| SOCIEDAD LIMITADA UNIPERSONAL|SOCIEDAD COOPERATIVA ANDALUZA)'
 
     # Dividir la cadena usando los tipos de sociedades como delimitador
     company_social_denomination_list = re.split(company_types_pattern, company_block)
-    print("company_block:", company_block)    
+
     # Reconstruir cada compañía y filtrar nombres no válidos o vacíos
     processed_companies = []
     company_names = []
@@ -57,7 +55,6 @@ def process_company_block(company_block):
             full_name = f"{name} {type}" if type else name
             processed_companies.append(full_name)
             company_names.append(name)
-    
 
     return processed_companies, company_names
 
@@ -134,17 +131,17 @@ def file_type_c(pdf_path):
        
     
     
-    company_social_denomination_block_pattern = r'\"([A-ZÁÉÍÓÚÑÀÈÌÒÙ`´&.,()\x27\u2019\s\d-]+?\s*(?:S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|S\.L\.U\.|S\.A\.U\.|SOCIEDAD LIMITADA|SOCIEDAD ANÓNIMA|ETC)\.?)"(?:\s+Y\s+\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ`´&.,()\x27\u2019\s\d-]+?\s*(?:S\.L\.|S\.A\.|S\.C\.|S\.Coop\.|S\.LL\.|S\.C\.R\.L\.|S\.L\.U\.|S\.A\.U\.|S\.L\.P\.|SOCIEDAD LIMITADA|SOCIEDAD ANÓNIMA|ETC)\.?")?' 
+    
+    company_social_denomination_block_pattern = r'\n\d+\s+([A-ZÁÉÍÓÚÑÀÈÌÒÙÄËÏÖÜ´’"ºNº\s\d&.,;·()\x27-]+?)\n(?:[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|D\.|D\.ª|M\.|M\.ª|Dña\.|\"[A-ZÁÉÍÓÚÑÀÈÌÒÙ]{2}\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|A\s+[a-záéíóúñàèìòù]|1\.\s+[A-ZÁÉÍÓÚÑÀÈÌÒÙ][a-záéíóúñàèìòù]|ANUNCIO DE FUSIÓN|ISABEL GARRUCHO SANCHEZ)'
 
     company_social_denomination_block_match = re.search(company_social_denomination_block_pattern, inscription, re.MULTILINE | re.DOTALL)
     if company_social_denomination_block_match:
         company_block = company_social_denomination_block_match.group(1)
-        print("Texto extraído para procesar:", company_block)
         full_company_names, company_names = process_company_block(company_block)
         
     
          
-    company_inscription = {
+        company_inscription = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "inscriptionCommercialRegistry": None,
@@ -159,10 +156,9 @@ def file_type_c(pdf_path):
                 "inscriptionFile": os.path.basename(pdf_path)
             } 
     
-    companies = []
-     
+    companies = []  
     for company_social_denomination, company_name in zip(full_company_names, company_names):
-     company = {
+        company = {
                 "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "companySocialDenomination": company_social_denomination,
@@ -194,15 +190,14 @@ def file_type_c(pdf_path):
                 "administrationAppointmentFile": None,
                 "companyInscription": [company_inscription]
             }
-    companies.append(company)
-   
+        companies.append(company)
     
     return companies
     
 
 @app.route('/')  # Defino la ruta
 def home():
-    pdf_path = "files/2009/12/01/pdfs/BORME-C-2009-34996.pdf"
+    pdf_path = "files/pruebas chicas/prueba_AyB/2023/11/24/pdfs/BORME-C-2023-7051.pdf"
     company = file_type_c(pdf_path)
     
     return jsonify(company)
